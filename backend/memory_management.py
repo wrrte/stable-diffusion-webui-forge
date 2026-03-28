@@ -251,7 +251,7 @@ ALWAYS_VRAM_OFFLOAD = args.always_offload_from_vram
 if ALWAYS_VRAM_OFFLOAD:
     print("Always offload VRAM")
 
-PIN_SHARED_MEMORY = True
+PIN_SHARED_MEMORY = args.pin_shared_memory
 
 if PIN_SHARED_MEMORY:
     print("Always pin shared GPU memory")

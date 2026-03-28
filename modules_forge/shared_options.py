@@ -3,7 +3,7 @@ def register(options_templates, options_section, OptionInfo):
         "forge_unet_storage_dtype": OptionInfo('Automatic'),
         "forge_inference_memory": OptionInfo(4096),
         "forge_async_loading": OptionInfo('Queue'),
-        "forge_pin_shared_memory": OptionInfo('Shared'),
+        "forge_pin_shared_memory": OptionInfo('CPU'),
         "forge_preset": OptionInfo('sd'),
         "forge_additional_modules": OptionInfo([]),
     }))
