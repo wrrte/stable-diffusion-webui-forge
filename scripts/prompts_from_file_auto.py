@@ -169,10 +169,6 @@ class Script(scripts.Script):
 
     def run(self, p, checkbox_iterate, checkbox_iterate_batch, prompt_position, prompt_txt: str, task_file: str):
         
-        #batch size를 1로 속여서 시꺼먼 이미지 생성 억제
-        p.n_iter = p.n_iter * p.batch_size
-        p.batch_size = 1
-        
         task_file_path = task_file.strip() if task_file else ""
         task_file_path = task_file_path.strip('"').strip("'")
         
@@ -251,19 +247,32 @@ class Script(scripts.Script):
                 else:
                     copy_p.negative_prompt = p.negative_prompt + " " + args.get("negative_prompt")
 
-            copy_p.n_iter = args.get("n_iter", p.n_iter)
-            start_job_no = state.job_no
+            completed_iters = 0
+            target_iter = args.get("n_iter", p.n_iter) # 원래 해야 할 총 횟수 저장
 
-            proc = process_images(copy_p)
-            images += proc.images
+            for j in range(target_iter):
+                if state.interrupted or state.skipped:
+                    break  # 유저가 중지 버튼을 누르면 루프 즉시 탈출
+
+                copy_p.n_iter = 1
+                start_job_no = state.job_no
+
+                proc = process_images(copy_p)
+                images += proc.images
+                
+                # 매장 나올때마다 정보를 바로바로 누적!
+                all_prompts += proc.all_prompts
+                infotexts += proc.infotexts
+
+                copy_p.seed += 1
+                completed_iters += 1
 
             if checkbox_iterate:
-                p.seed = p.seed + (p.batch_size * copy_p.n_iter)
-            all_prompts += proc.all_prompts
-            infotexts += proc.infotexts
+                # 다음 줄 작업을 위한 기준 시드 업데이트 (원래 횟수 기준)
+                p.seed = p.seed + (p.batch_size * target_iter)
 
-            completed_iters = state.job_no - start_job_no
-            remaining_iters = copy_p.n_iter - completed_iters
+            # 완료 횟수를 원래 횟수에서 빼서 남은 횟수 계산
+            remaining_iters = target_iter - completed_iters
 
             if remaining_iters > 0:
                 if "--n_iter" in line_str:
