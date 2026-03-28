@@ -21,7 +21,7 @@
     "controlnet_input_thumbnail": true,
     "forge_async_loading": "Queue",
     "forge_inference_memory": 4096,
-    "forge_pin_shared_memory": "Shared",
+    "forge_pin_shared_memory": "CPU",
     "forge_preset": "xl",
     "sd_model_checkpoint": "JANKUTrainedNoobaiRouwei_v60.safetensors",
     "CLIP_stop_at_last_layers": 1,
