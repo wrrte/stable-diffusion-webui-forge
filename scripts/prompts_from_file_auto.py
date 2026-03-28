@@ -168,6 +168,11 @@ class Script(scripts.Script):
         return [checkbox_iterate, checkbox_iterate_batch, prompt_position, prompt_txt, task_file]
 
     def run(self, p, checkbox_iterate, checkbox_iterate_batch, prompt_position, prompt_txt: str, task_file: str):
+        
+        #batch size를 1로 속여서 시꺼먼 이미지 생성 억제
+        p.n_iter = p.n_iter * p.batch_size
+        p.batch_size = 1
+        
         task_file_path = task_file.strip() if task_file else ""
         task_file_path = task_file_path.strip('"').strip("'")
         
