@@ -254,6 +254,7 @@ class Script(scripts.Script):
                     copy_p.negative_prompt = p.negative_prompt + " " + args.get("negative_prompt")
 
             completed_iters = 0
+
             target_iter = args.get("n_iter", p.n_iter) # 원래 해야 할 총 횟수 저장
 
             if p.seed == -1:
@@ -267,6 +268,9 @@ class Script(scripts.Script):
                 start_job_no = state.job_no
 
                 proc = process_images(copy_p)
+
+                completed_iters += state.job_no - start_job_no
+
                 images += proc.images
                 
                 # 매장 나올때마다 정보를 바로바로 누적!
@@ -274,7 +278,6 @@ class Script(scripts.Script):
                 infotexts += proc.infotexts
 
                 copy_p.seed += p.batch_size 
-                completed_iters += 1
 
             if checkbox_iterate:
                 # 다음 줄 작업을 위한 기준 시드 업데이트 (원래 횟수 기준)
