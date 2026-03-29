@@ -256,6 +256,9 @@ class Script(scripts.Script):
             completed_iters = 0
             target_iter = args.get("n_iter", p.n_iter) # 원래 해야 할 총 횟수 저장
 
+            if p.seed == -1:
+                copy_p.seed = int(random.randrange(4294967294))
+
             for j in range(target_iter):
                 if state.interrupted or state.skipped:
                     break  # 유저가 중지 버튼을 누르면 루프 즉시 탈출
@@ -270,7 +273,7 @@ class Script(scripts.Script):
                 all_prompts += proc.all_prompts
                 infotexts += proc.infotexts
 
-                copy_p.seed += p.batch_size
+                copy_p.seed += p.batch_size 
                 completed_iters += 1
 
             if checkbox_iterate:
