@@ -217,15 +217,24 @@ class Script(scripts.Script):
         uncompleted_jobs = []
 
         for i, (line_str, args) in enumerate(jobs):
+
             if state.interrupted or state.skipped:
                 uncompleted_jobs.append(line_str)
                 if not line_str or args is None:
                     uncompleted_jobs.append("")
                 continue
 
+            if not line_str or args is None:
+                continue
+
             state.job = f"{state.job_no + 1} out of {state.job_count}"
 
             copy_p = copy.copy(p)
+
+            copy_p.all_prompts = None
+            copy_p.all_seeds = None
+            copy_p.all_subseeds = None
+
             for k, v in args.items():
                 if k == "sd_model":
                     copy_p.override_settings['sd_model_checkpoint'] = v
@@ -261,7 +270,7 @@ class Script(scripts.Script):
                 all_prompts += proc.all_prompts
                 infotexts += proc.infotexts
 
-                copy_p.seed += 1
+                copy_p.seed += p.batch_size
                 completed_iters += 1
 
             if checkbox_iterate:
