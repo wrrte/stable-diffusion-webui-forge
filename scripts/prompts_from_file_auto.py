@@ -217,13 +217,10 @@ class Script(scripts.Script):
         uncompleted_jobs = []
 
         for i, (line_str, args) in enumerate(jobs):
-            if not line_str or args is None:
-                # 빈 줄은 이미지 생성 작업 없이 그대로 결과 파일에 추가합니다.
-                uncompleted_jobs.append("")
-                continue
-
             if state.interrupted or state.skipped:
                 uncompleted_jobs.append(line_str)
+                if not line_str or args is None:
+                    uncompleted_jobs.append("")
                 continue
 
             state.job = f"{state.job_no + 1} out of {state.job_count}"
