@@ -544,7 +544,14 @@ def configure_forge_reference_checkout(a1111_home: Path):
 def start():
     print(f"Launching {'API server' if '--nowebui' in sys.argv else 'Web UI'} with arguments: {shlex.join(sys.argv[1:])}")
     import webui
-    if '--nowebui' in sys.argv:
+    import argparse
+    from modules.cmd_args import parser
+    
+    args, _ = parser.parse_known_args()
+    
+    if getattr(args, 'auto_generate', None):
+        webui.auto_generate_only(args.auto_generate)
+    elif '--nowebui' in sys.argv:
         webui.api_only()
     else:
         webui.webui()

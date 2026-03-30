@@ -178,14 +178,17 @@ def webui_worker():
 
 def auto_generate_only_worker(task_file):
     from modules import shared, script_callbacks, sd_models
+    from modules_forge import main_entry
     import sys
     import os
     
     script_callbacks.before_ui_callback()
-    script_callbacks.app_started_callback(None, None)
     
-    if shared.sd_model is None:
-        sd_models.load_model()
+    from fastapi import FastAPI
+    app = FastAPI()
+    script_callbacks.app_started_callback(None, app)
+    
+    main_entry.refresh_model_loading_parameters()
     
     script_path = os.path.join(os.path.dirname(__file__), "scripts", "prompts_from_file_auto.py")
     import importlib.util
