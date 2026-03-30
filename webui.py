@@ -210,6 +210,7 @@ def auto_generate_only_worker(task_file):
         seed_resize_from_h=0,
         seed_resize_from_w=0,
         sampler_name="DPM++ 2M",
+        scheduler="Automatic",
         batch_size=1,
         n_iter=7,
         steps=30,
