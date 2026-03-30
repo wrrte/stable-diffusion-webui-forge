@@ -176,6 +176,73 @@ def webui_worker():
         initialize.initialize_rest(reload_script_modules=True)
 
 
+def auto_generate_only_worker(task_file):
+    from modules import shared, script_callbacks, sd_models
+    import sys
+    import os
+    
+    script_callbacks.before_ui_callback()
+    script_callbacks.app_started_callback(None, None)
+    
+    if shared.sd_model is None:
+        sd_models.load_model()
+    
+    script_path = os.path.join(os.path.dirname(__file__), "scripts", "prompts_from_file_auto.py")
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("prompts_from_file_auto", script_path)
+    auto_script = importlib.util.module_from_spec(spec)
+    sys.modules["prompts_from_file_auto"] = auto_script
+    spec.loader.exec_module(auto_script)
+
+    from modules.processing import StableDiffusionProcessingTxt2Img
+    from modules.shared import opts, state
+    import modules.scripts as scripts
+    
+    p = StableDiffusionProcessingTxt2Img(
+        sd_model=shared.sd_model,
+        outpath_samples=opts.outdir_samples or opts.outdir_txt2img_samples,
+        outpath_grids=opts.outdir_grids or opts.outdir_txt2img_grids,
+        prompt="",
+        styles=[],
+        seed=-1,
+        subseed=-1,
+        subseed_strength=0,
+        seed_resize_from_h=0,
+        seed_resize_from_w=0,
+        sampler_name="DPM++ 2M",
+        batch_size=1,
+        n_iter=7,
+        steps=30,
+        cfg_scale=5.0,
+        width=1024,
+        height=1536,
+        restore_faces=False,
+        tiling=False,
+        do_not_save_samples=False,
+        do_not_save_grid=True
+    )
+    p.scripts = scripts.scripts_txt2img
+    p.script_args = tuple([None] * p.scripts.alwayson_scripts_num) if hasattr(p.scripts, "alwayson_scripts_num") else ()
+    
+    script = auto_script.Script()
+    state.job_count = 0
+    state.job_no = 0
+    print(f"Auto-generating from {task_file}...")
+    try:
+        script.run(p, checkbox_iterate=False, checkbox_iterate_batch=False, prompt_position="start", prompt_txt="", task_file=task_file)
+        print("Auto-generation completed.")
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Error during auto-generation: {e}")
+    finally:
+        os._exit(0)
+
+
+def auto_generate_only(task_file):
+    Thread(target=auto_generate_only_worker, args=(task_file,), daemon=True).start()
+
+
 def api_only():
     Thread(target=api_only_worker, daemon=True).start()
 
@@ -187,7 +254,9 @@ def webui():
 if __name__ == "__main__":
     from modules.shared_cmd_options import cmd_opts
 
-    if cmd_opts.nowebui:
+    if getattr(cmd_opts, 'auto_generate', None):
+        auto_generate_only(cmd_opts.auto_generate)
+    elif cmd_opts.nowebui:
         api_only()
     else:
         webui()
