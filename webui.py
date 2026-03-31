@@ -201,6 +201,31 @@ def auto_generate_only_worker(task_file):
     from modules.shared import opts, state
     import modules.scripts as scripts
     
+    # p = StableDiffusionProcessingTxt2Img(
+    #     sd_model=shared.sd_model,
+    #     outpath_samples=opts.outdir_samples or opts.outdir_txt2img_samples,
+    #     outpath_grids=opts.outdir_grids or opts.outdir_txt2img_grids,
+    #     prompt="",
+    #     styles=[],
+    #     seed=-1,
+    #     subseed=-1,
+    #     subseed_strength=0,
+    #     seed_resize_from_h=0,
+    #     seed_resize_from_w=0,
+    #     sampler_name="DPM++ 2M",
+    #     scheduler="Automatic",
+    #     batch_size=1,
+    #     n_iter=7,
+    #     steps=30,
+    #     cfg_scale=5.0,
+    #     width=1024,
+    #     height=1536,
+    #     restore_faces=False,
+    #     tiling=False,
+    #     do_not_save_samples=False,
+    #     do_not_save_grid=True
+    # )
+
     p = StableDiffusionProcessingTxt2Img(
         sd_model=shared.sd_model,
         outpath_samples=opts.outdir_samples or opts.outdir_txt2img_samples,
@@ -213,18 +238,29 @@ def auto_generate_only_worker(task_file):
         seed_resize_from_h=0,
         seed_resize_from_w=0,
         sampler_name="DPM++ 2M",
-        scheduler="Automatic",
+        scheduler="Karras",
         batch_size=1,
         n_iter=7,
         steps=30,
         cfg_scale=5.0,
-        width=1024,
-        height=1536,
+        width=768,
+        height=1024,
         restore_faces=False,
         tiling=False,
         do_not_save_samples=False,
-        do_not_save_grid=True
+        do_not_save_grid=True,
+
+        # --- Hires. fix (Latent Upscaler) 설정 추가 ---
+        enable_hr=True,               # Hires. fix 활성화
+        hr_upscaler="Latent",         # 업스케일러 종류 ("Latent", "Latent (antialiased)", "Latent (bicubic)", "Latent (nearest-exact)" 등 사용 가능)
+        hr_scale=2.0,                 # 업스케일 배율 (예: 2.0이면 768x1024 -> 1536x2048 로 확대)
+        denoising_strength=0.55,      # 디노이징 강도 (Latent의 경우 보통 0.5 ~ 0.75 사이 권장, 너무 낮으면 흐릿하고 높으면 원본과 달라집니다)
+        hr_second_pass_steps=15,      # Hires. fix에 사용할 스텝 수 (0으로 두면 기본 steps와 동일하게 작동)
+        hr_cfg = 7.0,
+        hr_additional_modules=[],     # Hires. fix 추가 모듈 초기화 (필수)
+        # ----------------------------------------------
     )
+
     p.scripts = scripts.scripts_txt2img
     p.script_args = tuple([None] * p.scripts.alwayson_scripts_num) if hasattr(p.scripts, "alwayson_scripts_num") else ()
     
