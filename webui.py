@@ -230,7 +230,9 @@ def auto_generate_api_client(task_file, is_once=False):
         "hr_upscaler": "Latent",
         "hr_scale": 2.0,
         "denoising_strength": 0.55,
-        "hr_second_pass_steps": 15 if not is_once else 20,
+        "hr_second_pass_steps": 15,
+
+        "hr_additional_modules": ["Use same choices"],
         
         "script_name": title,
         "script_args": [
