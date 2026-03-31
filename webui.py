@@ -376,10 +376,6 @@ def webui():
 if __name__ == "__main__":
     from modules.shared_cmd_options import cmd_opts
 
-    # If auto actions are configured, make sure we imply nowebui
-    if getattr(cmd_opts, 'auto_generate', None) is not None or getattr(cmd_opts, 'auto_generate_once', None) is not None:
-        cmd_opts.nowebui = True
-
     def listen_for_interrupt():
         import sys
         from modules import shared
