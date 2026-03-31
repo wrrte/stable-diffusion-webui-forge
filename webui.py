@@ -33,7 +33,7 @@ def _handle_exception(request: Request, e: Exception):
         "error": type(e).__name__,
         "detail": error_information.get("detail", ""),
         "body": error_information.get("body", ""),
-        "message": str(e),
+        "message": str(e), "traceback": __import__("traceback").format_exc()
     }
     return JSONResponse(status_code=int(error_information.get("status_code", 500)), content=jsonable_encoder(content))
 
@@ -176,193 +176,96 @@ def webui_worker():
         initialize.initialize_rest(reload_script_modules=True)
 
 
-def auto_generate_only_worker(task_file):
-    from modules import shared, script_callbacks, sd_models
-    from modules_forge import main_entry
+def auto_generate_api_client(task_file, is_once=False):
+    from modules.shared_cmd_options import cmd_opts
+    import requests
+    import time
     import sys
     import os
-    
-    script_callbacks.before_ui_callback()
-    
-    from fastapi import FastAPI
-    app = FastAPI()
-    script_callbacks.app_started_callback(None, app)
-    
-    main_entry.refresh_model_loading_parameters()
-    
-    script_path = os.path.join(os.path.dirname(__file__), "scripts", "prompts_from_file_auto.py")
     import importlib.util
-    spec = importlib.util.spec_from_file_location("prompts_from_file_auto", script_path)
-    auto_script = importlib.util.module_from_spec(spec)
-    sys.modules["prompts_from_file_auto"] = auto_script
-    spec.loader.exec_module(auto_script)
-
-    from modules.processing import StableDiffusionProcessingTxt2Img
-    from modules.shared import opts, state
-    import modules.scripts as scripts
     
-    # p = StableDiffusionProcessingTxt2Img(
-    #     sd_model=shared.sd_model,
-    #     outpath_samples=opts.outdir_samples or opts.outdir_txt2img_samples,
-    #     outpath_grids=opts.outdir_grids or opts.outdir_txt2img_grids,
-    #     prompt="",
-    #     styles=[],
-    #     seed=-1,
-    #     subseed=-1,
-    #     subseed_strength=0,
-    #     seed_resize_from_h=0,
-    #     seed_resize_from_w=0,
-    #     sampler_name="DPM++ 2M",
-    #     scheduler="Automatic",
-    #     batch_size=1,
-    #     n_iter=7,
-    #     steps=30,
-    #     cfg_scale=5.0,
-    #     width=1024,
-    #     height=1536,
-    #     restore_faces=False,
-    #     tiling=False,
-    #     do_not_save_samples=False,
-    #     do_not_save_grid=True
-    # )
-
-    p = StableDiffusionProcessingTxt2Img(
-        sd_model=shared.sd_model,
-        outpath_samples=opts.outdir_samples or opts.outdir_txt2img_samples,
-        outpath_grids=opts.outdir_grids or opts.outdir_txt2img_grids,
-        prompt="",
-        styles=[],
-        seed=-1,
-        subseed=-1,
-        subseed_strength=0,
-        seed_resize_from_h=0,
-        seed_resize_from_w=0,
-        sampler_name="DPM++ 2M",
-        scheduler="Karras",
-        batch_size=1,
-        n_iter=7,
-        steps=30,
-        cfg_scale=5.0,
-        width=768,
-        height=1024,
-        restore_faces=False,
-        tiling=False,
-        do_not_save_samples=False,
-        do_not_save_grid=True,
-
-        # --- Hires. fix (Latent Upscaler) 설정 추가 ---
-        enable_hr=True,               # Hires. fix 활성화
-        hr_upscaler="Latent",         # 업스케일러 종류 ("Latent", "Latent (antialiased)", "Latent (bicubic)", "Latent (nearest-exact)" 등 사용 가능)
-        hr_scale=2.0,                 # 업스케일 배율 (예: 2.0이면 768x1024 -> 1536x2048 로 확대)
-        denoising_strength=0.55,      # 디노이징 강도 (Latent의 경우 보통 0.5 ~ 0.75 사이 권장, 너무 낮으면 흐릿하고 높으면 원본과 달라집니다)
-        hr_second_pass_steps=15,      # Hires. fix에 사용할 스텝 수 (0으로 두면 기본 steps와 동일하게 작동)
-        hr_cfg = 7.0,
-        hr_additional_modules=[],     # Hires. fix 추가 모듈 초기화 (필수)
-        # ----------------------------------------------
-    )
-
-    p.scripts = scripts.scripts_txt2img
-    p.script_args = tuple([None] * p.scripts.alwayson_scripts_num) if hasattr(p.scripts, "alwayson_scripts_num") else ()
+    port = cmd_opts.port if cmd_opts.port else 7861
+    base_url = f"http://127.0.0.1:{port}"
     
-    script = auto_script.Script()
-    state.job_count = 0
-    state.job_no = 0
-    print(f"Auto-generating from {task_file}...")
+    print(f"Waiting for API server to start on {base_url}...")
+    while True:
+        try:
+            res = requests.get(f"{base_url}/sdapi/v1/progress", timeout=2)
+            if res.status_code == 200:
+                print("API server is ready!")
+                break
+        except requests.exceptions.RequestException:
+            pass
+        time.sleep(2)
+        
+    script_name = "prompts_from_file_auto" if not is_once else "prompts_from_file_auto_once"
+    script_path = os.path.join(os.path.dirname(__file__), "scripts", f"{script_name}.py")
+    title = script_name
     try:
-        script.run(p, checkbox_iterate=False, checkbox_iterate_batch=False, prompt_position="start", prompt_txt="", task_file=task_file)
-        print("Auto-generation completed.")
+        if os.path.exists(script_path):
+            spec = importlib.util.spec_from_file_location(script_name, script_path)
+            auto_script = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(auto_script)
+            title = auto_script.Script().title()
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        print(f"Error during auto-generation: {e}")
-    finally:
-        import signal
-        os.kill(os.getpid(), signal.SIGINT)
-
-
-def auto_generate_once_only_worker(task_file):
-    from modules import shared, script_callbacks, sd_models
-    from modules_forge import main_entry
-    import sys
-    import os
+        print(f"Warning: Could not get script title dynamically, using fallback. {e}")
+        
+    print(f"Starting API generation task from: {task_file}")
     
-    script_callbacks.before_ui_callback()
+    payload = {
+        "prompt": "",
+        "seed": -1,
+        "sampler_name": "DPM++ 2M",
+        "scheduler": "Karras" if not is_once else "Automatic",
+        "batch_size": 1,
+        "n_iter": 7,
+        "steps": 30,
+        "cfg_scale": 5.0,
+        "width": 832,
+        "height": 1216,
+        "restore_faces": False,
+        "tiling": False,
+        
+        "enable_hr": True,
+        "hr_upscaler": "Latent",
+        "hr_scale": 2.0,
+        "denoising_strength": 0.55,
+        "hr_second_pass_steps": 15 if not is_once else 20,
+        
+        "script_name": title,
+        "script_args": [
+            False,   # checkbox_iterate
+            False,   # checkbox_iterate_batch
+            "start", # prompt_position
+            "",      # prompt_txt
+            task_file# task_file
+        ]
+    }
     
-    from fastapi import FastAPI
-    app = FastAPI()
-    script_callbacks.app_started_callback(None, app)
-    
-    main_entry.refresh_model_loading_parameters()
-    
-    script_path = os.path.join(os.path.dirname(__file__), "scripts", "prompts_from_file_auto_once.py")
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("prompts_from_file_auto_once", script_path)
-    auto_script = importlib.util.module_from_spec(spec)
-    sys.modules["prompts_from_file_auto_once"] = auto_script
-    spec.loader.exec_module(auto_script)
-
-    from modules.processing import StableDiffusionProcessingTxt2Img
-    from modules.shared import opts, state
-    import modules.scripts as scripts
-    
-    p = StableDiffusionProcessingTxt2Img(
-        sd_model=shared.sd_model,
-        outpath_samples=opts.outdir_samples or opts.outdir_txt2img_samples,
-        outpath_grids=opts.outdir_grids or opts.outdir_txt2img_grids,
-        prompt="",
-        styles=[],
-        seed=-1,
-        subseed=-1,
-        subseed_strength=0,
-        seed_resize_from_h=0,
-        seed_resize_from_w=0,
-        sampler_name="DPM++ 2M",
-        scheduler="Automatic",
-        batch_size=1,
-        n_iter=7,
-        steps=30,
-        cfg_scale=5.0,
-        width=768,
-        height=1024,
-        restore_faces=False,
-        tiling=False,
-        do_not_save_samples=False,
-        do_not_save_grid=True,
-
-        # --- Hires. fix (Latent Upscaler) 설정 추가 ---
-        enable_hr=True,               # Hires. fix 활성화
-        hr_upscaler="Latent",         # 업스케일러 종류 ("Latent", "Latent (antialiased)", "Latent (bicubic)", "Latent (nearest-exact)" 등 사용 가능)
-        hr_scale=2.0,                 # 업스케일 배율 (예: 2.0이면 768x1024 -> 1536x2048 로 확대)
-        denoising_strength=0.55,      # 디노이징 강도 (Latent의 경우 보통 0.5 ~ 0.75 사이 권장, 너무 낮으면 흐릿하고 높으면 원본과 달라집니다)
-        hr_second_pass_steps=20,      # Hires. fix에 사용할 스텝 수 (0으로 두면 기본 steps와 동일하게 작동)
-        hr_additional_modules=[],     # Hires. fix 추가 모듈 초기화 (필수)
-        # ----------------------------------------------
-    )
-    p.scripts = scripts.scripts_txt2img
-    p.script_args = tuple([None] * p.scripts.alwayson_scripts_num) if hasattr(p.scripts, "alwayson_scripts_num") else ()
-    
-    script = auto_script.Script()
-    state.job_count = 0
-    state.job_no = 0
-    print(f"Auto-generating (once) from {task_file}...")
+    if not is_once:
+        payload["hr_cfg"] = 7.0
+        
     try:
-        script.run(p, checkbox_iterate=False, checkbox_iterate_batch=False, prompt_position="start", prompt_txt="", task_file=task_file)
-        print("Auto-generation once completed.")
+        response = requests.post(f"{base_url}/sdapi/v1/txt2img", json=payload)
+        if response.status_code == 200:
+            print("Auto-generation successfully completed.")
+        else:
+            print(f"Auto-generation failed: {response.status_code} - {response.text}")
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        print(f"Error during auto-generation once: {e}")
+        print(f"API request failed: {e}")
     finally:
         import signal
         os.kill(os.getpid(), signal.SIGINT)
 
 
 def auto_generate_only(task_file):
-    Thread(target=auto_generate_only_worker, args=(task_file,), daemon=True).start()
+    api_only()
+    Thread(target=auto_generate_api_client, args=(task_file, False), daemon=True).start()
 
 
 def auto_generate_once_only(task_file):
-    Thread(target=auto_generate_once_only_worker, args=(task_file,), daemon=True).start()
+    api_only()
+    Thread(target=auto_generate_api_client, args=(task_file, True), daemon=True).start()
 
 
 def api_only():
