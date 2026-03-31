@@ -240,7 +240,8 @@ def auto_generate_only_worker(task_file):
         traceback.print_exc()
         print(f"Error during auto-generation: {e}")
     finally:
-        os._exit(0)
+        import signal
+        os.kill(os.getpid(), signal.SIGINT)
 
 
 def auto_generate_once_only_worker(task_file):
@@ -290,7 +291,15 @@ def auto_generate_once_only_worker(task_file):
         restore_faces=False,
         tiling=False,
         do_not_save_samples=False,
-        do_not_save_grid=True
+        do_not_save_grid=True,
+
+        # --- Hires. fix (Latent Upscaler) 설정 추가 ---
+        enable_hr=True,               # Hires. fix 활성화
+        hr_upscaler="Latent",         # 업스케일러 종류 ("Latent", "Latent (antialiased)", "Latent (bicubic)", "Latent (nearest-exact)" 등 사용 가능)
+        hr_scale=2.0,                 # 업스케일 배율 (예: 2.0이면 1024x1536 -> 2048x3072 로 확대)
+        denoising_strength=0.55,      # 디노이징 강도 (Latent의 경우 보통 0.5 ~ 0.75 사이 권장, 너무 낮으면 흐릿하고 높으면 원본과 달라집니다)
+        hr_second_pass_steps=20,      # Hires. fix에 사용할 스텝 수 (0으로 두면 기본 steps와 동일하게 작동)
+        # ----------------------------------------------
     )
     p.scripts = scripts.scripts_txt2img
     p.script_args = tuple([None] * p.scripts.alwayson_scripts_num) if hasattr(p.scripts, "alwayson_scripts_num") else ()
@@ -307,7 +316,8 @@ def auto_generate_once_only_worker(task_file):
         traceback.print_exc()
         print(f"Error during auto-generation once: {e}")
     finally:
-        os._exit(0)
+        import signal
+        os.kill(os.getpid(), signal.SIGINT)
 
 
 def auto_generate_only(task_file):
@@ -328,6 +338,10 @@ def webui():
 
 if __name__ == "__main__":
     from modules.shared_cmd_options import cmd_opts
+
+    # If auto actions are configured, make sure we imply nowebui
+    if getattr(cmd_opts, 'auto_generate', None) is not None or getattr(cmd_opts, 'auto_generate_once', None) is not None:
+        cmd_opts.nowebui = True
 
     def listen_for_interrupt():
         import sys
