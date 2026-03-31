@@ -243,8 +243,79 @@ def auto_generate_only_worker(task_file):
         os._exit(0)
 
 
+def auto_generate_once_only_worker(task_file):
+    from modules import shared, script_callbacks, sd_models
+    from modules_forge import main_entry
+    import sys
+    import os
+    
+    script_callbacks.before_ui_callback()
+    
+    from fastapi import FastAPI
+    app = FastAPI()
+    script_callbacks.app_started_callback(None, app)
+    
+    main_entry.refresh_model_loading_parameters()
+    
+    script_path = os.path.join(os.path.dirname(__file__), "scripts", "prompts_from_file_auto_once.py")
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("prompts_from_file_auto_once", script_path)
+    auto_script = importlib.util.module_from_spec(spec)
+    sys.modules["prompts_from_file_auto_once"] = auto_script
+    spec.loader.exec_module(auto_script)
+
+    from modules.processing import StableDiffusionProcessingTxt2Img
+    from modules.shared import opts, state
+    import modules.scripts as scripts
+    
+    p = StableDiffusionProcessingTxt2Img(
+        sd_model=shared.sd_model,
+        outpath_samples=opts.outdir_samples or opts.outdir_txt2img_samples,
+        outpath_grids=opts.outdir_grids or opts.outdir_txt2img_grids,
+        prompt="",
+        styles=[],
+        seed=-1,
+        subseed=-1,
+        subseed_strength=0,
+        seed_resize_from_h=0,
+        seed_resize_from_w=0,
+        sampler_name="DPM++ 2M",
+        scheduler="Automatic",
+        batch_size=1,
+        n_iter=7,
+        steps=30,
+        cfg_scale=5.0,
+        width=1024,
+        height=1536,
+        restore_faces=False,
+        tiling=False,
+        do_not_save_samples=False,
+        do_not_save_grid=True
+    )
+    p.scripts = scripts.scripts_txt2img
+    p.script_args = tuple([None] * p.scripts.alwayson_scripts_num) if hasattr(p.scripts, "alwayson_scripts_num") else ()
+    
+    script = auto_script.Script()
+    state.job_count = 0
+    state.job_no = 0
+    print(f"Auto-generating (once) from {task_file}...")
+    try:
+        script.run(p, checkbox_iterate=False, checkbox_iterate_batch=False, prompt_position="start", prompt_txt="", task_file=task_file)
+        print("Auto-generation once completed.")
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Error during auto-generation once: {e}")
+    finally:
+        os._exit(0)
+
+
 def auto_generate_only(task_file):
     Thread(target=auto_generate_only_worker, args=(task_file,), daemon=True).start()
+
+
+def auto_generate_once_only(task_file):
+    Thread(target=auto_generate_once_only_worker, args=(task_file,), daemon=True).start()
 
 
 def api_only():
@@ -271,6 +342,8 @@ if __name__ == "__main__":
 
     if getattr(cmd_opts, 'auto_generate', None):
         auto_generate_only(cmd_opts.auto_generate)
+    elif getattr(cmd_opts, 'auto_generate_once', None):
+        auto_generate_once_only(cmd_opts.auto_generate_once)
     elif cmd_opts.nowebui:
         api_only()
     else:
