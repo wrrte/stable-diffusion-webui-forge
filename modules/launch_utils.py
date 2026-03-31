@@ -546,12 +546,6 @@ def start():
     import argparse
     from modules.cmd_args import parser
     args, _ = parser.parse_known_args()
-    
-    # If auto-generate or auto-generate-once is set, ensure we act like --nowebui
-    if getattr(args, 'auto_generate', None) is not None or getattr(args, 'auto_generate_once', None) is not None:
-        if '--nowebui' not in sys.argv:
-            sys.argv.append('--nowebui')
-            args.nowebui = True
 
     print(f"Launching {'API server' if '--nowebui' in sys.argv else 'Web UI'} with arguments: {shlex.join(sys.argv[1:])}")
     import webui
