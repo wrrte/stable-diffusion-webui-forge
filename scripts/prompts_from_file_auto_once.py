@@ -216,9 +216,11 @@ class Script(scripts.Script):
         
         uncompleted_jobs = []
 
+        created = False
+
         for i, (line_str, args) in enumerate(jobs):
 
-            if state.interrupted or state.skipped:
+            if created or state.interrupted or state.skipped:
                 uncompleted_jobs.append(line_str)
                 if not line_str or args is None:
                     uncompleted_jobs.append("")
@@ -260,31 +262,21 @@ class Script(scripts.Script):
             if p.seed == -1:
                 copy_p.seed = int(random.randrange(4294967294))
 
-            for j in range(target_iter):
-                if state.interrupted or state.skipped:
-                    break  # 유저가 중지 버튼을 누르면 루프 즉시 탈출
+            copy_p.n_iter = 1
+            start_job_no = state.job_no
 
-                copy_p.n_iter = 1
-                start_job_no = state.job_no
+            proc = process_images(copy_p)
 
-                proc = process_images(copy_p)
+            completed_iters += state.job_no - start_job_no
 
-                completed_iters += state.job_no - start_job_no
+            if  ( completed_iters>=1 ):
+                created = True
 
-                images += proc.images
-                
-                # 매장 나올때마다 정보를 바로바로 누적!
-                all_prompts += proc.all_prompts
-                infotexts += proc.infotexts
-
-                copy_p.seed += p.batch_size 
-                
-                from modules import shared
-                shared.state.interrupt()
-
-            if checkbox_iterate:
-                # 다음 줄 작업을 위한 기준 시드 업데이트 (원래 횟수 기준)
-                p.seed = p.seed + (p.batch_size * target_iter)
+            images += proc.images
+            
+            # 매장 나올때마다 정보를 바로바로 누적!
+            all_prompts += proc.all_prompts
+            infotexts += proc.infotexts
 
             # 완료 횟수를 원래 횟수에서 빼서 남은 횟수 계산
             remaining_iters = target_iter - completed_iters
