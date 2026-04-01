@@ -280,17 +280,6 @@ def webui():
 if __name__ == "__main__":
     from modules.shared_cmd_options import cmd_opts
 
-    def listen_for_interrupt():
-        import sys
-        from modules import shared
-        print("Interrupt listener started. Type 'q' and press Enter in the terminal to interrupt smoothly at any time...")
-        for line in sys.stdin:
-            if line.strip().lower() == 'q':
-                print("\nInterrupt requested via terminal. Finishing current image generation...")
-                shared.state.interrupt()
-
-    Thread(target=listen_for_interrupt, daemon=True).start()
-
     if getattr(cmd_opts, 'auto_generate', None):
         auto_generate_only(cmd_opts.auto_generate)
     elif getattr(cmd_opts, 'auto_generate_once', None):

@@ -222,12 +222,11 @@ class Script(scripts.Script):
 
             if created or state.interrupted or state.skipped:
                 uncompleted_jobs.append(line_str)
-                if not line_str or args is None:
-                    uncompleted_jobs.append("")
                 continue
 
-            if not line_str or args is None:
-                continue
+            # if not line_str or args is None:
+            #     uncompleted_jobs.append(line_str)
+            #     continue
 
             state.job = f"{state.job_no + 1} out of {state.job_count}"
 
