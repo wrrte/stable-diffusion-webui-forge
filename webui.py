@@ -211,7 +211,7 @@ def auto_generate_api_client(task_file, is_once=False):
         print(f"Warning: Could not get script title dynamically, using fallback. {e}")
         
     print(f"Starting API generation task from: {task_file}")
-    
+
     payload = {
         "prompt": "",
         "seed": -1,
@@ -225,6 +225,7 @@ def auto_generate_api_client(task_file, is_once=False):
         "height": 1216,
         "restore_faces": False,
         "tiling": False,
+        "save_images": True,
         
         "enable_hr": True,
         "hr_upscaler": "Latent",
@@ -243,6 +244,38 @@ def auto_generate_api_client(task_file, is_once=False):
             task_file# task_file
         ]
     }
+    
+    # payload = {
+    #     "prompt": "",
+    #     "seed": -1,
+    #     "sampler_name": "DPM++ 2M",
+    #     "scheduler": "Karras" if not is_once else "Automatic",
+    #     "batch_size": 1,
+    #     "n_iter": 7,
+    #     "steps": 30,
+    #     "cfg_scale": 5.0,
+    #     "width": 832,
+    #     "height": 1216,
+    #     "restore_faces": False,
+    #     "tiling": False,
+        
+    #     "enable_hr": True,
+    #     "hr_upscaler": "Latent",
+    #     "hr_scale": 2.0,
+    #     "denoising_strength": 0.55,
+    #     "hr_second_pass_steps": 15,
+
+    #     "hr_additional_modules": ["Use same choices"],
+        
+    #     "script_name": title,
+    #     "script_args": [
+    #         False,   # checkbox_iterate
+    #         False,   # checkbox_iterate_batch
+    #         "start", # prompt_position
+    #         "",      # prompt_txt
+    #         task_file# task_file
+    #     ]
+    # }
     
     if not is_once:
         payload["hr_cfg"] = 7.0
