@@ -216,7 +216,7 @@ def auto_generate_api_client(task_file, is_once=False):
         "prompt": "",
         "seed": -1,
         "sampler_name": "DPM++ 2M",
-        "scheduler": "Karras" if not is_once else "Automatic",
+        "scheduler": "Karras",
         "batch_size": 1,
         "n_iter": 7,
         "steps": 30,
@@ -232,6 +232,7 @@ def auto_generate_api_client(task_file, is_once=False):
         "hr_scale": 2.1,
         "denoising_strength": 0.55,
         "hr_second_pass_steps": 15,
+        "hr_cfg": 7.0,
 
         "hr_additional_modules": ["Use same choices"],
         
@@ -244,10 +245,7 @@ def auto_generate_api_client(task_file, is_once=False):
             task_file# task_file
         ]
     }
-    
-    if not is_once:
-        payload["hr_cfg"] = 7.0
-        
+
     try:
         response = requests.post(f"{base_url}/sdapi/v1/txt2img", json=payload)
         if response.status_code == 200:
