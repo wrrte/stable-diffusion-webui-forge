@@ -169,6 +169,48 @@ class Script(scripts.Script):
 
     def run(self, p, checkbox_iterate, checkbox_iterate_batch, prompt_position, prompt_txt: str, task_file: str):
         
+        # --- 터미널에서 'q' 입력을 감지하는 백그라운드 스레드 시작 ---
+        self.stop_listening = False
+        
+        def listen_q():
+            import sys
+            import time
+            if sys.platform == "win32":
+                import msvcrt
+                while not self.stop_listening:
+                    if msvcrt.kbhit():
+                        c = msvcrt.getch()
+                        if c.lower() == b'q':
+                            print("\n[Auto Generate] 'q' 키 입력 감지됨! 현재 이미지 생성 완료 후 중지합니다 (Interrupt)...\n")
+                            state.interrupt()
+                            break
+                    time.sleep(0.1)
+            else:
+                try:
+                    import select, termios, tty
+                    fd = sys.stdin.fileno()
+                    if os.isatty(fd):
+                        old_settings = termios.tcgetattr(fd)
+                        try:
+                            tty.setcbreak(fd)
+                            while not self.stop_listening:
+                                r, _, _ = select.select([sys.stdin], [], [], 0.5)
+                                if r:
+                                    c = sys.stdin.read(1)
+                                    if c.lower() == 'q':
+                                        print("\n[Auto Generate] 'q' 키 입력 감지됨! 현재 이미지 생성 완료 후 중지합니다 (Interrupt)...\n")
+                                        state.interrupt()
+                                        break
+                        finally:
+                            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+                except Exception:
+                    pass
+
+        import threading
+        listen_thread = threading.Thread(target=listen_q, daemon=True)
+        listen_thread.start()
+        # -------------------------------------------------------------
+        
         task_file_path = task_file.strip() if task_file else ""
         task_file_path = task_file_path.strip('"').strip("'")
         
@@ -300,4 +342,5 @@ class Script(scripts.Script):
             except Exception as e:
                 print(f"Error updating task file: {e}")
 
+        self.stop_listening = True
         return Processed(p, images, p.seed, "", all_prompts=all_prompts, infotexts=infotexts)
