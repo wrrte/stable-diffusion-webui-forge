@@ -171,6 +171,7 @@ class Script(scripts.Script):
         
         # --- 터미널에서 'q' 입력을 감지하는 백그라운드 스레드 시작 ---
         self.stop_listening = False
+        self.graceful_stop = False
         
         def listen_q():
             import sys
@@ -181,8 +182,8 @@ class Script(scripts.Script):
                     if msvcrt.kbhit():
                         c = msvcrt.getch()
                         if c.lower() == b'q':
-                            print("\n[Auto Generate] 'q' 키 입력 감지됨! 현재 이미지 생성 완료 후 중지합니다 (Interrupt)...\n")
-                            state.interrupt()
+                            print("\n[Auto Generate] 'q' 키 입력 감지됨! 현재 이미지 생성 완료 후 중지합니다 (Graceful Stop)...\n")
+                            self.graceful_stop = True
                             break
                     time.sleep(0.1)
             else:
@@ -198,8 +199,8 @@ class Script(scripts.Script):
                                 if r:
                                     c = sys.stdin.read(1)
                                     if c.lower() == 'q':
-                                        print("\n[Auto Generate] 'q' 키 입력 감지됨! 현재 이미지 생성 완료 후 중지합니다 (Interrupt)...\n")
-                                        state.interrupt()
+                                        print("\n[Auto Generate] 'q' 키 입력 감지됨! 현재 이미지 생성 완료 후 중지합니다 (Graceful Stop)...\n")
+                                        self.graceful_stop = True
                                         break
                         finally:
                             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
@@ -260,7 +261,7 @@ class Script(scripts.Script):
 
         for i, (line_str, args) in enumerate(jobs):
 
-            if state.interrupted or state.skipped:
+            if state.interrupted or state.skipped or getattr(self, 'graceful_stop', False):
                 uncompleted_jobs.append(line_str)
                 continue
 
@@ -302,7 +303,7 @@ class Script(scripts.Script):
                 copy_p.seed = int(random.randrange(4294967294))
 
             for j in range(target_iter):
-                if state.interrupted or state.skipped:
+                if state.interrupted or state.skipped or getattr(self, 'graceful_stop', False):
                     break  # 유저가 중지 버튼을 누르면 루프 즉시 탈출
 
                 copy_p.n_iter = 1
