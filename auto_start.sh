@@ -20,4 +20,4 @@ do
     sleep 20
 done
 
-./webui_hr_disable.sh --auto-generate
+./webui.sh --auto-generate
