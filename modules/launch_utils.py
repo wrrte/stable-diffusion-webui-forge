@@ -549,9 +549,10 @@ def start():
 
     print(f"Launching {'API server' if '--nowebui' in sys.argv else 'Web UI'} with arguments: {shlex.join(sys.argv[1:])}")
     import webui
+    import webui_hr_disable
     
     if getattr(args, 'auto_generate', None):
-        webui.auto_generate_only(args.auto_generate)
+        webui_hr_disable.auto_generate_only(args.auto_generate)
     elif getattr(args, 'auto_generate_once', None):
         webui.auto_generate_once_only(args.auto_generate_once)
     elif '--nowebui' in sys.argv:
