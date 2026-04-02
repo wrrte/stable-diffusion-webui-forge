@@ -311,7 +311,8 @@ class Script(scripts.Script):
 
                 proc = process_images(copy_p)
 
-                completed_iters += state.job_no - start_job_no
+                # completed_iters += state.job_no - start_job_no
+                completed_iters += 1
 
                 images += proc.images
                 
