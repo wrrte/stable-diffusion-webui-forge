@@ -218,7 +218,7 @@ def auto_generate_api_client(task_file, is_once=False):
         "sampler_name": "DPM++ 2M",
         "scheduler": "Karras",
         "batch_size": 1,
-        "n_iter": 7,
+        "n_iter": 1,
         "steps": 30,
         "cfg_scale": 5.0,
         "width": 832,
