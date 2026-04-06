@@ -212,7 +212,7 @@ def auto_generate_only_worker(task_file):
         subseed_strength=0,
         seed_resize_from_h=0,
         seed_resize_from_w=0,
-        sampler_name="DPM++ 2M",
+        sampler_name="Euler a",
         scheduler="Automatic",
         batch_size=1,
         n_iter=3,
