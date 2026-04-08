@@ -232,7 +232,7 @@ def auto_generate_api_client(task_file, is_once=False):
         "hr_scale": 2.0,
         "denoising_strength": 0.6,
         "hr_second_pass_steps": 15,
-        "hr_cfg": 7.0,
+        "hr_cfg": 3.0,
 
         "hr_additional_modules": ["Use same choices"],
         
