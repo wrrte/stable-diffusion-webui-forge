@@ -61,6 +61,8 @@ prompt_tags = {
     "do_not_save_grid": process_boolean_tag,
     "enable_hr": process_boolean_tag,
     "denoising_strength": process_float_tag,
+    "hr_prompt": process_string_tag,
+    "hr_negative_prompt": process_string_tag,
     "hr_upscaler": process_string_tag,
     "hr_scale": process_float_tag,
     "hr_second_pass_steps": process_int_tag,
