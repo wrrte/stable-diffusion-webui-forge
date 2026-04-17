@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PROMPT_FILE="/Users/choemj/Desktop/prompts.txt"
+PROMPT_FILE="/Users/choemj/Painting/prompts.txt"
 
 # 무한 반복 루프
 while true
