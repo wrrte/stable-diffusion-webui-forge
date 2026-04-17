@@ -234,6 +234,7 @@ def auto_generate_api_client(task_file, is_once=False):
         "hr_second_pass_steps": 15,
         "hr_cfg": 5.0,
 
+        # "forge_additional_modules": ["fixFP16ErrorsSDXLLowerMemoryUse_v10"],
         "hr_additional_modules": ["Use same choices"],
         
         "script_name": title,
