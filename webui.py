@@ -27,10 +27,6 @@ initialize.check_versions()
 initialize.initialize()
 
 
-AUTO_GENERATE_ONCE_VAE_PATH = "/Users/choemj/Painting/stable-diffusion-webui-forge/models/VAE/fixFP16ErrorsSDXLLowerMemoryUse_v10.safetensors"
-AUTO_GENERATE_ONCE_VAE_NAME = os.path.basename(AUTO_GENERATE_ONCE_VAE_PATH)
-
-
 def _handle_exception(request: Request, e: Exception):
     error_information = vars(e)
     content = {
@@ -249,19 +245,6 @@ def auto_generate_api_client(task_file, is_once=False):
             task_file# task_file
         ]
     }
-
-    if is_once:
-        if os.path.isfile(AUTO_GENERATE_ONCE_VAE_PATH):
-            payload["override_settings"] = {
-                "sd_vae": AUTO_GENERATE_ONCE_VAE_NAME,
-            }
-            payload["override_settings_restore_afterwards"] = True
-            print(f"Using auto-generate-once VAE: {AUTO_GENERATE_ONCE_VAE_NAME}")
-        else:
-            print(
-                f"Warning: auto-generate-once VAE file not found at {AUTO_GENERATE_ONCE_VAE_PATH}. "
-                "Using current VAE setting."
-            )
 
     try:
         response = requests.post(f"{base_url}/sdapi/v1/txt2img", json=payload)
