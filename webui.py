@@ -220,7 +220,7 @@ def auto_generate_api_client(task_file, is_once=False):
         "batch_size": 1,
         "n_iter": 1,
         "steps": 30,
-        "cfg_scale": 5.0,
+        "cfg_scale": 5.5,
         "width": 832,
         "height": 1216,
         "restore_faces": False,
@@ -230,7 +230,7 @@ def auto_generate_api_client(task_file, is_once=False):
         "enable_hr": True,
         "hr_upscaler": "Latent",
         "hr_scale": 2.0,
-        "denoising_strength": 0.57,
+        "denoising_strength": 0.54,
         "hr_second_pass_steps": 15,
         "hr_cfg": 5.5,
 
