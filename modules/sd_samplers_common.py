@@ -265,6 +265,13 @@ class Sampler:
     def callback_state(self, d):
         step = d['i']
 
+        import torch
+        
+        # 잠재(Latent) 행렬 d['x'] 내부에 NaN이나 무한대(Inf) 값이 단 하나라도 있는지 스캔
+        if torch.isnan(d['x']).any() or torch.isinf(d['x']).any():
+            print(f"\n[🚨 비상 정지] 스텝 {step}에서 Latent 행렬의 연산 폭발(NaN/Inf)이 감지되었습니다. VRAM 보호를 위해 생성을 즉시 중단합니다.")
+            raise Exception("NansException: 텐서 연산에서 NaN 값이 발생했습니다.")
+
         if self.stop_at is not None and step > self.stop_at:
             raise InterruptedException
 
