@@ -220,7 +220,7 @@ def auto_generate_api_client(task_file, is_once=False):
         "batch_size": 1,
         "n_iter": 1,
         "steps": 30,
-        "cfg_scale": 7.0,
+        "cfg_scale": 6.0,
         "width": 832,
         "height": 1216,
         "restore_faces": False,
@@ -232,7 +232,7 @@ def auto_generate_api_client(task_file, is_once=False):
         "hr_scale": 2.0,
         "denoising_strength": 0.56,
         "hr_second_pass_steps": 15,
-        "hr_cfg": 5.0,
+        "hr_cfg": 5.5,
 
         # "forge_additional_modules": ["fixFP16ErrorsSDXLLowerMemoryUse_v10"],
         "hr_additional_modules": ["Use same choices"],

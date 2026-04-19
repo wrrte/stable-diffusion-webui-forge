@@ -16,8 +16,8 @@ do
     # 경로에 맞게 명령어 수정
     ./webui.sh --auto-generate-once
     
-    echo "생성 완료 및 프로그램 종료됨. 60초 후 다시 시작합니다..."
-    sleep 60
+    echo "생성 완료 및 프로그램 종료됨. 10초 후 다시 시작합니다..."
+    sleep 10
 done
 
 ./webui.sh --auto-generate
