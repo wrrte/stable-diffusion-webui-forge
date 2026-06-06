@@ -230,8 +230,8 @@ def auto_generate_api_client(task_file, is_once=False):
         "enable_hr": True,
         "hr_upscaler": "Latent (bicubic)",
         "hr_scale": 2.0,
-        "denoising_strength": 0.52,
-        "hr_second_pass_steps": 15,
+        "denoising_strength": 0.51,
+        "hr_second_pass_steps": 20,
         "hr_cfg": 5.5,
 
         # "forge_additional_modules": ["fixFP16ErrorsSDXLLowerMemoryUse_v10"],
