@@ -228,7 +228,7 @@ def auto_generate_api_client(task_file, is_once=False):
         "save_images": True,
         
         "enable_hr": True,
-        "hr_upscaler": "Latent (bicubic)",
+        "hr_upscaler": "Latent (nearest-exact)",
         "hr_scale": 1.75,
         "denoising_strength": 0.52,
         "hr_second_pass_steps": 15,
