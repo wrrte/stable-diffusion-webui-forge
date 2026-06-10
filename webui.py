@@ -228,11 +228,11 @@ def auto_generate_api_client(task_file, is_once=False):
         "save_images": True,
         
         "enable_hr": True,
-        "hr_upscaler": "Latent (nearest-exact)",
+        "hr_upscaler": "Latent (bicubic)",
         "hr_scale": 1.75,
-        "denoising_strength": 0.52,
+        "denoising_strength": 0.53,
         "hr_second_pass_steps": 15,
-        "hr_cfg": 5.5,
+        "hr_cfg": 4.0,
 
         # "forge_additional_modules": ["fixFP16ErrorsSDXLLowerMemoryUse_v10"],
         "hr_additional_modules": ["Use same choices"],
